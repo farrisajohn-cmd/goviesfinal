@@ -1,21 +1,25 @@
-import { OpenAI } from 'openai';
 import { OpenAIStream, StreamingTextResponse } from 'ai';
+import OpenAI from 'openai';
+import { NextRequest } from 'next/server';
 
-// Initialize OpenAI with your API key
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
+  apiKey: process.env.OPENAI_API_KEY!,
 });
 
-// API Route handler
-export const POST = async (req: Request) => {
+export const runtime = 'edge';
+
+export async function POST(req: NextRequest) {
   const { messages } = await req.json();
 
-  const response = await openai.chat.completions.create({
-    model: 'gpt-4',
+  const payload: OpenAI.Chat.Completions.ChatCompletionCreateParams = {
+    model: 'gpt-4o',
     stream: true,
-    messages
+    messages,
+  };
+
+  const stream = OpenAIStream(payload, {
+    apiKey: process.env.OPENAI_API_KEY!,
   });
 
-  const stream = OpenAIStream(response);
   return new StreamingTextResponse(stream);
-};
+}
